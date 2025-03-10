@@ -3,6 +3,11 @@ env/
 */venv/
 */env/
 flaskapp/
+flaskappenv/
 myenv/
 .venv/
 */.venv/
+instance/database.db
+__pycache__/
+*.pyc
+*.pyo
