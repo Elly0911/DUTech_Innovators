@@ -1,6 +1,6 @@
 Run these commands when you first clone the repository:
 
-1. Ensure youre in the right file location:
+1. Ensure you are in the right file location:
    
     cd (your folder location)
     
