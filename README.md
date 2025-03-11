@@ -1,16 +1,16 @@
-Run these commands when you first clone the repository
+Run these commands when you first clone the repository:
 cd <your folder loaction>
 
-# Create a virtual environment
+1. Create a virtual environment
 python -m venv flaskappenv
 
-# Activate the virtual environment (Windows)
+2. Activate the virtual environment (Windows)
 flaskappenv\Scripts\activate
 
-# Install dependencies
+3. Install dependencies
 pip install -r requirements.txt
 
-# Apply new database migrations (if changes exist)
+4. Apply new database migrations (if changes exist)
 flask db init (only run this if the migrations folder is not there when you first clone, otherwise don’t run)
 flask db upgrade
 
