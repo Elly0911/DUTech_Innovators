@@ -1,8 +1,8 @@
 Run these commands when you first clone the repository:
 
-1. Ensure you are in the right file location:
+1. Ensure you are in the correct directory:
    
-    cd (your folder location)
+    cd your-folder-location
     
 2. Create a virtual environment:
    
@@ -18,7 +18,7 @@ Run these commands when you first clone the repository:
 
 5. Apply new database migrations (if changes exist):
 
-    flask db init (only run this if the migrations folder is not there when you first clone, otherwise don’t run, only run flask db upgrade)
+    flask db init (Only run flask db init if the migrations folder is missing when you first clone the repository. Otherwise, skip this step and just run flask db upgrade.)
   
     flask db upgrade
 
