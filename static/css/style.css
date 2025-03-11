@@ -1,0 +1,87 @@
+nav {
+    background-color: black;
+    padding: 14px;
+}
+
+nav a {
+    color: white;
+    margin: 0 15px;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+}
+
+nav a:hover {
+    color: cornflowerblue;
+}
+
+/*LOGIN & SIGNUP FORM STYLING*/
+.auth-container {
+    width: 380px;
+    margin: 50px auto;
+    padding: 25px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.auth-label {
+    font-weight: bold;
+    text-align: left;
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.input-field {
+    width: 95%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.input-field:hover,
+.input-field:focus {
+    border-color: cornflowerblue;
+    outline: none;
+}
+
+.auth-button {
+    width: 100%;
+    background-color: black;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.auth-button:hover {
+    background-color: cornflowerblue;
+    color: white;
+}
+
+.auth-container a {
+    color: black;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+}
+
+.auth-container a:hover {
+    color: cornflowerblue;
+}
