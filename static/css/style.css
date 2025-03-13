@@ -1,6 +1,70 @@
 nav {
     background-color: black;
-    padding: 14px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 0.3s;
+}
+
+.user-icon:hover {
+    background-color: lightblue;
+}
+
+.dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 45px;
+    background-color: #fff;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    min-width: 220px;
+    z-index: 1;
+    border-radius: 6px;
+    padding: 12px;
+    padding-bottom: 16px;
+}
+
+.dropdown-content p {
+    padding: 8px 0;
+    color: #333;
+    font-size: 14px;
+    margin: -5px 0 10px 0;
+    font-weight: bold;
+    text-align: center;
+}
+
+.logout-btn {
+    background-color: black;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 5px;
+    text-align: center;
+    width: 100%;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
 }
 
 nav a {
@@ -9,20 +73,19 @@ nav a {
     font-size: 16px;
     font-weight: bold;
     text-decoration: none;
-    transition: color 0.3s ease-in-out;
 }
 
 nav a:hover {
     color: cornflowerblue;
 }
 
-/*LOGIN & SIGNUP FORM STYLING*/
 .auth-container {
     width: 380px;
     margin: 50px auto;
-    padding: 25px;
+    padding: 30px;
     background-color: #fff;
     border-radius: 10px;
+    border: 2px solid black;
     box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
     text-align: center;
     font-family: Arial, sans-serif;
@@ -32,20 +95,19 @@ nav a:hover {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    align-items: flex-start;
+    align-items: stretch;
+    width: 100%;
 }
 
 .auth-label {
     font-weight: bold;
     text-align: left;
-    display: block;
-    width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 }
 
 .input-field {
-    width: 95%;
-    padding: 12px;
+    width: 100%;
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 16px;
@@ -58,11 +120,27 @@ nav a:hover {
     outline: none;
 }
 
+.password-container {
+    position: relative;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: none;
+}
+
 .auth-button {
     width: 100%;
     background-color: black;
     color: white;
-    padding: 12px;
+    padding: 10px;
     border: none;
     border-radius: 6px;
     font-size: 16px;
@@ -72,16 +150,26 @@ nav a:hover {
 
 .auth-button:hover {
     background-color: cornflowerblue;
-    color: white;
 }
 
-.auth-container a {
-    color: black;
-    font-weight: bold;
-    text-decoration: none;
-    transition: color 0.3s ease-in-out;
+#tutorFields .auth-label {
+    text-align: left;
+    margin-bottom: 12px;
+    display: block;
 }
 
-.auth-container a:hover {
-    color: cornflowerblue;
+#tutorFields .input-field {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.declaration-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.declaration-label {
+    font-size: 16px;
+    margin-left: 4px;
 }

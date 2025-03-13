@@ -10,6 +10,25 @@
             var tutorFields = document.getElementById("tutorFields");
             tutorFields.style.display = roleSelect.value === "tutor" ? "block" : "none";
         }
+
+        function togglePassword(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.src = "https://img.icons8.com/ios-filled/50/000000/visible.png"; // Open eye icon
+            } else {
+                input.type = "password";
+                icon.src = "https://img.icons8.com/ios-filled/50/000000/invisible.png"; // Closed eye icon
+            }
+        }
+
+        function showPasswordIcon(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            icon.style.display = input.value ? "block" : "none";
+        }
     </script>
 </head>
 <body>
@@ -19,30 +38,68 @@
     <div class="auth-container">
         <h2>{{ "Login" if form_type == "login" else "Sign Up" }}</h2>
 
-        {% if form_type == "login" %}
-        <form method="POST" class="auth-form">
-            {{ login_form.hidden_tag() }}
-            <label>Email:</label>{{ login_form.email(class="input-field") }} <br>
-            <label>Password:</label>{{ login_form.password(class="input-field") }} <br>
-            <button type="submit" class="auth-button">Login</button>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    <ul>
+                        {% for message in messages %}
+                            <li style="color: red;">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endwith %}
 
+        {% if form_type == "login" %}
+        <form method="POST" class="auth-form" novalidate>
+            {{ login_form.hidden_tag() }}
+            <label for="email" class="auth-label">Email:</label>
+            {{ login_form.email(id="email", class="input-field") }}
+
+            <label for="password" class="auth-label">Password:</label>
+            <div class="password-container">
+                {{ login_form.password(id="password", class="input-field", oninput="showPasswordIcon('password', 'passwordIcon')") }}
+                <img src="https://img.icons8.com/ios-filled/50/000000/invisible.png" id="passwordIcon" class="password-toggle" onclick="togglePassword('password', 'passwordIcon')" style="display: none;">
+            </div>
+
+            <button type="submit" class="auth-button">Login</button>
         </form>
         <p>Don't have an account? <a href="{{ url_for('auth', form_type='signup') }}">Sign Up</a></p>
 
         {% else %}
-        <form method="POST" enctype="multipart/form-data" class="auth-form">
+        <form method="POST" enctype="multipart/form-data" class="auth-form" novalidate>
             {{ signup_form.hidden_tag() }}
-            <label>Name:</label>{{ signup_form.name(class="input-field") }}<br>
-            <label>Email:</label>{{ signup_form.email(class="input-field") }}<br>
-            <label>Password:</label>{{ signup_form.password(class="input-field") }}<br>
-            <label>Role:</label>{{ signup_form.role(class="input-field", id="roleSelect", onchange="toggleTutorFields()") }}<br>
-            
-            <div id="tutorFields" style="display: none;">
-                <label>Average Grade:</label>{{ signup_form.average_grade(class="input-field") }}<br>
-                <label>Upload Academic Record:</label>{{ signup_form.result_document(class="input-field") }}<br>
-                <label>{{ signup_form.declaration() }} I confirm my uploaded academic record is accurate</label><br>
+            <label for="name" class="auth-label">Name:</label>
+            {{ signup_form.name(id="name", class="input-field") }}
+        
+            <label for="email" class="auth-label">Email:</label>
+            {{ signup_form.email(id="email", class="input-field") }}
+        
+            <label for="password" class="auth-label">Password:</label>
+            <div class="password-container">
+                {{ signup_form.password(id="password", class="input-field", oninput="showPasswordIcon('password', 'signupPasswordIcon')") }}
+                <img src="https://img.icons8.com/ios-filled/50/000000/invisible.png" id="signupPasswordIcon" class="password-toggle" onclick="togglePassword('password', 'signupPasswordIcon')" style="display: none;">
             </div>
-
+        
+            <label for="role" class="auth-label">Role:</label>
+            {{ signup_form.role(id="roleSelect", class="input-field", onchange="toggleTutorFields()") }}
+        
+            <div id="tutorFields" style="display: none;">
+                <label for="average_grade" class="auth-label">Average Grade:</label>
+                {{ signup_form.average_grade(id="average_grade", class="input-field") }}
+        
+                <label for="result_document" class="auth-label">Upload Academic Record (PDF, PNG, JPG, JPEG only):</label>
+                {{ signup_form.result_document(id="result_document", class="input-field") }}
+        
+                {% if result_document_filename %}
+                <p>Uploaded file: {{ result_document_filename }}</p>
+                {% endif %}
+                
+                <div class="declaration-container">
+                    {{ signup_form.declaration(id="declaration") }}
+                    <label for="declaration" class="declaration-label">I confirm my uploaded academic record is accurate</label>
+                </div>
+            </div>
             <button type="submit" class="auth-button">Sign Up</button>
         </form>
         <p>Already have an account? <a href="{{ url_for('auth', form_type='login') }}">Login</a></p>
