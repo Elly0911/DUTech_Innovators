@@ -3,10 +3,52 @@ from forms import LoginForm, SignupForm
 from config import Config
 from models import db, User
 from flask_migrate import Migrate
+from flask_mail import Mail, Message
 import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
+mail = Mail(app)
+
+
+def send_confirmation_email(student_email, tutor_email, student_name, tutor_name, date, time):
+    """Send booking confirmation emails to both the student and tutor."""
+
+
+    student_subject = "Tutor Booking Confirmation"
+    student_body = f"Dear {student_name},\n\nYou have successfully booked {tutor_name} as your tutor on {date} at {time}.\n\nBest,\nTutoring Team"
+    
+    student_msg = Message(student_subject, recipients=[student_email])
+    student_msg.body = student_body
+    mail.send(student_msg)  
+
+    tutor_subject = "New Student Booking"
+    tutor_body = f"Dear {tutor_name},\n\nYou have a new student booking.\nStudent: {student_name}\nDate: {date}\nTime: {time}\n\nBest,\nTutoring Team"
+
+    tutor_msg = Message(tutor_subject, recipients=[tutor_email])
+    tutor_msg.body = tutor_body
+    mail.send(tutor_msg)   
+    
+    @app.route('/book_tutor', methods=['GET', 'POST'])
+    def book_tutor():
+     if request.method == 'POST':
+        
+        student_email = request.form['student_email']
+        tutor_email = request.form['tutor_email']
+        student_name = request.form['student_name']
+        tutor_name = request.form['tutor_name']
+        date = request.form['date']  
+        time = request.form['time']  
+
+       
+        send_confirmation_email(student_email, tutor_email, student_name, tutor_name, date, time)
+
+        flash("Booking confirmed! Emails sent to both student and tutor.")
+        return redirect(url_for('home'))  
+
+    return render_template('book_tutor.html')  
+
+
 
 db.init_app(app)
 migrate = Migrate(app, db)
