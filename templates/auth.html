@@ -29,6 +29,46 @@
             var icon = document.getElementById(iconId);
             icon.style.display = input.value ? "block" : "none";
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+        var fileInput = document.getElementById("result_document");
+        var fileNameSpan = document.getElementById("file-name");
+        var deleteButton = document.getElementById("delete-file-btn");
+        var fileUploadContainer = document.querySelector('.file-upload-container');
+
+        // Show file name and delete button when a file is selected
+        fileInput.addEventListener("change", function() {
+            if (fileInput.files.length > 0) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+                deleteButton.style.display = "inline-block"; // Show the delete button
+                fileUploadContainer.classList.add('has-file');  // Add class to show delete button
+            }
+        });
+
+        // Function to delete the file selection (without API call)
+        window.deleteFile = function() {
+            fileNameSpan.textContent = ""; // Clear displayed filename
+            deleteButton.style.display = "none"; // Hide delete button
+            fileInput.value = ""; // Reset file input
+            fileUploadContainer.classList.remove('has-file'); // Remove the class to hide delete button
+        };
+
+            // Real-time email validation for the format @dut4life.ac.za
+            var emailInput = document.getElementById("email");
+            var emailError = document.getElementById("email-error");
+
+            emailInput.addEventListener("input", function() {
+                var emailValue = emailInput.value;
+
+                // Only show error if email does not end with "@dut4life.ac.za"
+                if (emailValue.includes("@") && !emailValue.endsWith("@dut4life.ac.za")) {
+                    emailError.textContent = "Email must end with @dut4life.ac.za";
+                    emailError.style.color = "red";
+                } else {
+                    emailError.textContent = ""; // Clear the error message when valid
+                }
+            });
+        });
     </script>
 </head>
 <body>
@@ -55,6 +95,7 @@
             {{ login_form.hidden_tag() }}
             <label for="email" class="auth-label">Email:</label>
             {{ login_form.email(id="email", class="input-field") }}
+           
 
             <label for="password" class="auth-label">Password:</label>
             <div class="password-container">
@@ -74,12 +115,16 @@
         
             <label for="email" class="auth-label">Email:</label>
             {{ signup_form.email(id="email", class="input-field") }}
+            <span id="email-error"></span>
         
             <label for="password" class="auth-label">Password:</label>
             <div class="password-container">
                 {{ signup_form.password(id="password", class="input-field", oninput="showPasswordIcon('password', 'signupPasswordIcon')") }}
                 <img src="https://img.icons8.com/ios-filled/50/000000/invisible.png" id="signupPasswordIcon" class="password-toggle" onclick="togglePassword('password', 'signupPasswordIcon')" style="display: none;">
             </div>
+
+            <label for="department" class="auth-label">Department:</label>
+            {{ signup_form.department(id="department", class="input-field") }}  
         
             <label for="role" class="auth-label">Role:</label>
             {{ signup_form.role(id="roleSelect", class="input-field", onchange="toggleTutorFields()") }}
@@ -89,12 +134,12 @@
                 {{ signup_form.average_grade(id="average_grade", class="input-field") }}
         
                 <label for="result_document" class="auth-label">Upload Academic Record (PDF, PNG, JPG, JPEG only):</label>
+                <div class="file-upload-container">
                 {{ signup_form.result_document(id="result_document", class="input-field") }}
-        
-                {% if result_document_filename %}
-                <p>Uploaded file: {{ result_document_filename }}</p>
-                {% endif %}
-                
+                <span id="file-name"></span>
+                <button type="button" id="delete-file-btn" onclick="deleteFile()" title="Delete file"></button>
+                </div>
+
                 <div class="declaration-container">
                     {{ signup_form.declaration(id="declaration") }}
                     <label for="declaration" class="declaration-label">I confirm my uploaded academic record is accurate</label>

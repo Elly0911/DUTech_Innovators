@@ -9,6 +9,7 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(10), nullable=False)
     average_grade = db.Column(db.Float, nullable=True)
+    department = db.Column(db.String(10), nullable=False)
     result_document = db.Column(db.String(255), nullable=True)
 
     def __repr__(self):

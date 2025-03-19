@@ -173,3 +173,42 @@ nav a:hover {
     font-size: 16px;
     margin-left: 4px;
 }
+
+.file-upload-container {
+    position: relative;
+}
+
+.file-upload-container #delete-file-btn {
+    position: absolute;
+    right: 10px; /* Adjust to place the icon further inside the input field */
+    top: 40%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;  /* Hidden by default */
+    opacity: 1; /* Make the icon more visible */
+    transition: opacity 0.3s ease;
+}
+
+.file-upload-container #delete-file-btn:hover {
+    opacity: 1;  /* Make the icon fully visible when hovered */
+}
+
+.file-upload-container #delete-file-btn::before {
+    content: "";
+    display: block;
+    background-image: url('https://img.icons8.com/?size=100&id=47259&format=png&color=000000'); /* Replace with your bin icon URL */
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 24px;  /* Adjust size of the icon */
+    height: 24px; /* Adjust size of the icon */
+}
+
+.file-upload-container.has-file #delete-file-btn {
+    display: inline-block; /* Show the delete button when a file is uploaded */
+}
+
+.file-upload-container #file-name {
+    display: none; /* Hide file name text */
+}
