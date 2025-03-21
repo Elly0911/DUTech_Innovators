@@ -10,7 +10,7 @@
     <nav>
         <a href="{{ url_for('home') }}">Home</a> |
 
-        {% if user_logged_in %}
+        {% if session['user_id'] %}
             <!-- Display user icon and name if logged in -->
             <div class="dropdown">
                 <div class="user-icon">
@@ -46,6 +46,11 @@
                     dropdownContent.style.display = 'none';
                 }
             });
+
+            setTimeout(function() {
+                let alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => alert.style.display = 'none');
+            }, 3000);  
         });
     </script>
 </body>

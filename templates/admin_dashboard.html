@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block content %}
+    <h2>Admin Dashboard</h2>
+
+    <!-- Display Statistics -->
+    <div class="stats-container">
+        <h3>Platform Statistics</h3>
+        <p><strong>Total Tutors:</strong> {{ total_tutors }}</p>
+        <p><strong>Approved Tutors:</strong> {{ approved_tutors }}</p>
+        <p><strong>Pending Tutors:</strong> {{ pending_tutors }}</p>
+        <p><strong>Declined Tutors:</strong> {{ declined_tutors }}</p>
+        <p><strong>Total Students:</strong> {{ total_students }}</p>
+    </div>
+    
+    <!-- Pending Tutor Approval Section -->
+    {% if tutors %}
+        <h3>Pending Tutor Approvals</h3>
+        <table border="1">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Average Grade</th>
+                <th>Academic Record</th>
+                <th>Actions</th>
+            </tr>
+    
+            {% for tutor in tutors %}
+            <tr>
+                <td>{{ tutor.name }}</td>
+                <td>{{ tutor.email }}</td>
+                <td>{{ tutor.average_grade }}</td>
+                <td>
+                    {% if tutor.result_document %}
+                        <button onclick="openModal('{{ tutor.id }}', `{{ url_for('download_file', filename=tutor.result_document) }}`)">
+                            Preview Academic Record
+                        </button>
+                    {% else %}
+                        No file uploaded
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('approve_tutor', user_id=tutor.id) }}">Approve/Decline</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No tutors pending approval.</p>
+    {% endif %}
+    
+    <!-- Modal for PDF Preview -->
+    <div id="pdfModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <iframe id="pdfFrame"></iframe>
+        </div>
+    </div>
+    
+    <script>
+        function openModal(id, pdfUrl) {
+            var modal = document.getElementById('pdfModal');
+            var pdfFrame = document.getElementById('pdfFrame');
+            pdfFrame.src = pdfUrl;
+            modal.style.display = 'block';
+        }
+    
+        function closeModal() {
+            document.getElementById('pdfModal').style.display = 'none';
+        }
+    
+        window.onclick = function(event) {
+            var modal = document.getElementById('pdfModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+    
+    {% endblock %}
+</body>
+</html>

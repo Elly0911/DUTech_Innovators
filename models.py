@@ -11,6 +11,7 @@ class User(db.Model):
     average_grade = db.Column(db.Float, nullable=True)
     department = db.Column(db.String(10), nullable=False)
     result_document = db.Column(db.String(255), nullable=True)
+    status = db.Column(db.String(10), default="pending")
 
     def __repr__(self):
         return f"User('{self.id}', '{self.name}', '{self.role}')"
