@@ -1,0 +1,52 @@
+<!-- templates/calendar.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Calendar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="profile">Logged in as: {{ session.username }} | <a href="{{ url_for('logout') }}">Logout</a></div>
+    <h1>My Calendar</h1>
+
+    <!-- Calendar Table -->
+    <table>
+        <!-- Header Row (Days of the Week) -->
+        <tr>
+            <th></th>
+            {% for day in calendar_data %}
+                <th class="day-header">{{ day.day_name }}<br>{{ day.date }}</th>
+            {% endfor %}
+        </tr>
+
+        <!-- Time Slots Rows -->
+        {% for time in timeslots %}
+            <tr>
+                <td class="time-header">{{ time }}</td>
+                {% for day in calendar_data %}
+                    <td class="slot {{ day.slots[timeslots.index(time)].status }}">
+                        <div class="slot">
+                            {% if day.slots[timeslots.index(time)].status == "available" %}
+                                <span class="available">Available</span>
+                            {% elif day.slots[timeslots.index(time)].status == "pending" %}
+                                <span class="pending">Pending Approval</span>
+                            {% elif day.slots[timeslots.index(time)].status == "approved" %}
+                                <span class="approved">Approved<br>Meeting ID: {{ day.slots[timeslots.index(time)].meeting_id }}</span>
+                            {% elif day.slots[timeslots.index(time)].status == "declined" %}
+                                <span class="declined">Declined</span>
+                            {% else %}
+                                <span class="unavailable">Unavailable</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+
+    <!-- View Notifications Button -->
+    <a href="{{ url_for('notifications_page') }}" class="view-notifications-btn">View Notifications</a>
+</body>
+</html>

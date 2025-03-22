@@ -1,0 +1,26 @@
+<!-- templates/notifications.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="profile">Logged in as: {{ session.username }} | <a href="{{ url_for('logout') }}">Logout</a></div>
+    <h1>Notifications</h1>
+
+    <!-- Notifications List -->
+    <ul>
+        {% for notification in notifications %}
+            <li{% if 'approved' in notification.message %} style="color: green"{% elif 'declined' in notification.message %} style="color: red"{% endif %}>
+                {{ notification.message }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Back to Calendar Button (Styled Link) -->
+    <a href="{{ url_for('calendar') }}" class="back-to-calendar-btn">Back to Calendar</a>
+</body>
+</html>

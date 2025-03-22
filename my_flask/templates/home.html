@@ -1,0 +1,14 @@
+<!-- templates/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Welcome to the Booking Platform!</h1>
+    <p>Please <a href="{{ url_for('register') }}">register</a> or <a href="{{ url_for('login') }}">log in</a> to continue.</p>
+</body>
+</html>

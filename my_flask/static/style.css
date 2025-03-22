@@ -1,0 +1,121 @@
+/* static/style.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f9f9f9; /* Light background */
+}
+
+.profile {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    font-weight: bold;
+    background-color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px auto;
+    border: 1px solid black;
+    font-size: 14px; /* Medium font size */
+    table-layout: fixed; /* Ensures consistent cell sizes */
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+th.day-header {
+    background-color: lightgray;
+    font-weight: bold;
+    color: black;
+}
+
+td.time-header {
+    background-color: lightgray;
+    width: 100px;
+    font-weight: bold;
+    color: black;
+}
+
+.slot.available {
+    background-color: lightblue; /* Available slots */
+    color: black;
+}
+
+.slot.unavailable {
+    background-color: white; /* Unavailable slots */
+    color: gray;
+    border: 1px dashed gray;
+}
+
+.slot.pending {
+    background-color: yellow; /* Pending approval slots */
+    color: black;
+    font-weight: bold;
+}
+
+.slot.approved {
+    background-color: green; /* Approved slots */
+    color: white;
+    font-weight: bold;
+}
+
+.slot.declined {
+    background-color: red; /* Declined slots */
+    color: white;
+    font-weight: bold;
+}
+
+/* View Notifications Button */
+.view-notifications-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: blue;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.view-notifications-btn:hover {
+    background-color: darkblue; /* Darker blue on hover */
+}
+
+/* Tutor Dashboard Approve/Decline Buttons */
+.approve-btn {
+    background-color: green; /* Green approve button */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.approve-btn:hover {
+    background-color: darkgreen; /* Darker green on hover */
+}
+
+.decline-btn {
+    background-color: red; /* Red decline button */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.decline-btn:hover {
+    background-color: darkred; /* Darker red on hover */
+}

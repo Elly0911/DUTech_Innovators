@@ -1,0 +1,47 @@
+<!-- templates/tutor_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="profile">Logged in as: {{ session.tutor }} | <a href="{{ url_for('logout') }}">Logout</a></div>
+    <h1>Tutor Dashboard</h1>
+
+    <!-- Bookings Table -->
+    <table class="tutor-dashboard-table">
+        <tr>
+            <th>User</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        {% for booking in bookings %}
+            {% if booking.tutor == session.tutor %}
+                <tr>
+                    <td>{{ booking.user }}</td>
+                    <td>{{ booking.date }}</td>
+                    <td>{{ booking.time }}</td>
+                    <td>{{ booking.status.capitalize() }}</td>
+                    <td>
+                        {% if booking.status == "pending" %}
+                            <!-- Approve Button -->
+                            <form action="{{ url_for('tutor_action', user=booking.user, date=booking.date, time=booking.time, action='approve') }}" method="post">
+                                <button type="submit" class="approve-btn">Approve</button>
+                            </form>
+                            <!-- Decline Button -->
+                            <form action="{{ url_for('tutor_action', user=booking.user, date=booking.date, time=booking.time, action='decline') }}" method="post">
+                                <button type="submit" class="decline-btn">Decline</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
+</body>
+</html>
