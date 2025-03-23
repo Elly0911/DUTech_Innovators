@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Tutor Dashboard</h1>
+
+    <!-- Bookings Table -->
+    <table class="tutor-dashboard-table">
+        <tr>
+            <th>User</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.student.name }}</td>
+                    <td>{{ booking.date }}</td>
+                    <td>{{ booking.time }}</td>
+                    <td>{{ booking.status.capitalize() }}</td>
+                    <td>
+                        {% if booking.status == "pending" %}
+                            <!-- Approve Button -->
+                            <form method="POST" action="{{ url_for('tutor_action', booking_id=booking.id, action='approve') }}">
+                                <button type="submit" class="approve-btn">Approve</button>
+                            </form>
+                            <!-- Decline Button -->
+                            <form method="POST" action="{{ url_for('tutor_action', booking_id=booking.id, action='decline') }}">
+                                <button type="submit" class="decline-btn">Decline</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

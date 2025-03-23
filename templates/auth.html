@@ -78,18 +78,6 @@
     <div class="auth-container">
         <h2>{{ "Login" if form_type == "login" else "Sign Up" }}</h2>
 
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="flash-messages">
-                    <ul>
-                        {% for message in messages %}
-                            <li style="color: red;">{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-        {% endwith %}
-
         {% if form_type == "login" %}
         <form method="POST" class="auth-form" novalidate>
             {{ login_form.hidden_tag() }}
@@ -130,7 +118,7 @@
             {{ signup_form.role(id="roleSelect", class="input-field", onchange="toggleTutorFields()") }}
         
             <div id="tutorFields" style="display: none;">
-                <label for="average_grade" class="auth-label">Average Grade:</label>
+                <label for="average_grade" class="auth-label">Average Grade (must be atleast 75%):</label>
                 {{ signup_form.average_grade(id="average_grade", class="input-field") }}
         
                 <label for="result_document" class="auth-label">Upload Academic Record (PDF, PNG, JPG, JPEG only):</label>

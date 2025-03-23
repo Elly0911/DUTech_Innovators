@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Notifications</h1>
+
+    <!-- Notifications List -->
+    <ul>
+        {% for notification in notifications %}
+            <li{% if 'approved' in notification.message %} style="color: green"{% elif 'declined' in notification.message %} style="color: red"{% endif %}>
+                {{ notification.message }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Back to Calendar Button (Styled Link) -->
+    <a href="{{ url_for('calendar') }}" class="back-to-calendar-btn">Back to Calendar</a>
+{% endblock %}

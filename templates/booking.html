@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Booking Page</h1>
+
+    <!-- Booking Form -->
+    <form action="{{ url_for('booking') }}" method="post">
+        <label for="date">Select Date:</label>
+        <input type="date" id="date" name="date" required><br><br>
+
+        <label for="time">Select Time:</label>
+        <input type="time" id="time" name="time" min="08:00" max="20:00" required><br><br>
+
+        <label for="tutor">Select Tutor:</label>
+        <select id="tutor" name="tutor" required>
+            {% for tutor in tutors %}
+            <option value="{{ tutor.id }}" {% if tutor.status != 'approved' %}disabled{% endif %}>
+                {{ tutor.name }} ({{ "Available" if tutor.status == 'approved' else "Unavailable" }})
+              </option>
+            {% endfor %}
+        </select><br><br>
+
+        <button type="submit">Book Slot</button>
+    </form>
+{% endblock %}

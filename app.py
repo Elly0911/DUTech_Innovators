@@ -1,12 +1,16 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, session, send_from_directory
+from flask import Flask, render_template, redirect, url_for, flash, request, session, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from flask_migrate import Migrate
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from forms import LoginForm, SignupForm
 from config import Config
-from models import db, User
+from models import db, User, Booking
 import os
+import random
+import string
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -14,6 +18,11 @@ app.config.from_object(Config)
 db.init_app(app)
 migrate = Migrate(app, db)
 mail = Mail(app)  # Initialize Flask-Mail
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "auth"
 
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -27,22 +36,37 @@ def send_email(recipient, subject, body):
     msg.body = body
     mail.send(msg)
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+notifications = []  # List of notifications for students
+
+# Generate time slots (8 AM - 8 PM)
+timeslots = [f"{hour:02d}:00" for hour in range(8, 20)]  
+
+def generate_meeting_id():
+    """Generate a random meeting ID"""
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+
 @app.route('/')
 def home():
-    user_logged_in = session.get('user_id', None)
-    return render_template('home.html', user_logged_in=user_logged_in)
+    return render_template('home.html')
 
 @app.route('/auth/<string:form_type>', methods=['GET', 'POST'])
 def auth(form_type="login"):
     login_form = LoginForm()
     signup_form = SignupForm()
 
+    # Handle login form submission
     if login_form.validate_on_submit() and form_type == "login":
         email = login_form.email.data
         password = login_form.password.data
         user = User.query.filter_by(email=email).first()
 
+        # Check if user exists and password matches
         if user and check_password_hash(user.password, password):
+            # Handle status for tutors
             if user.role == "tutor":
                 if user.status == "pending":
                     flash("Your tutor account is pending approval.", "warning")
@@ -50,22 +74,25 @@ def auth(form_type="login"):
                 elif user.status == "declined":
                     flash("Your tutor application has been declined.", "danger")
                     return redirect(url_for('auth', form_type="login"))
-
-            # Store user session
-            session['user_id'] = user.id
-            session['user_name'] = user.name
-
-            # Redirect admin to admin dashboard
-            if user.role == "admin":
-                flash("Admin login successful!", "success")
-                return redirect(url_for('admin_dashboard'))  # FIX: Explicitly redirect admins
             
+            # Logs in the user using Flask-Login
+            login_user(user)
             flash("Login successful!", "success")
-            return redirect(url_for('home'))  # Other users go to home
 
+            # Redirect students directly to booking page
+            if user.role == "student":
+                return redirect(url_for('booking'))  # Redirect students to booking
+            
+            # Redirect approved tutors to the tutor dashboard
+            if user.role == "tutor" and user.status == "approved":
+                return redirect(url_for('tutor_dashboard'))  # Redirect tutors to their dashboard
+
+            # Redirect admin to admin dashboard or home for others
+            return redirect(url_for('admin_dashboard') if user.role == "admin" else url_for('home'))
         else:
             flash("Invalid email or password", "danger")
 
+    # Handle signup form submission
     if signup_form.validate_on_submit() and form_type == "signup":
         existing_user = User.query.filter_by(email=signup_form.email.data).first()
         if existing_user:
@@ -75,6 +102,7 @@ def auth(form_type="login"):
         hashed_password = generate_password_hash(signup_form.password.data)
         result_document_filename = None
 
+        # Handle result document upload for tutors
         if signup_form.role.data == "tutor":
             file = signup_form.result_document.data
             if file:
@@ -90,71 +118,211 @@ def auth(form_type="login"):
             department=signup_form.department.data,
             average_grade=signup_form.average_grade.data if signup_form.role.data == "tutor" else None,
             result_document=result_document_filename,
-            status="pending" if signup_form.role.data == "tutor" else None  # Admins do not have 'pending' status
+            status="pending" if signup_form.role.data == "tutor" else None
         )
 
         db.session.add(new_user)
         db.session.commit()
 
+        # Send pending notification email to tutor
         if new_user.role == "tutor":
             send_email(new_user.email, "Tutor Application Pending", 
                        "Your tutor application is pending approval. You will be notified once it is reviewed.")
 
-        flash("Signup successful! Your tutor application is pending approval.", "info")
+        # Flash success messages
+        if new_user.role == "tutor":
+            flash("Signup successful! Your tutor application is pending approval.", "info")
+        else:
+            flash("Signup successful! You are now a student.", "info")
+
         return redirect(url_for('auth', form_type="login"))
 
     return render_template('auth.html', form_type=form_type, login_form=login_form, signup_form=signup_form)
 
+# Booking Page
+@app.route('/booking', methods=['GET', 'POST'])
+@login_required
+def booking():
+    if current_user.role != "student":
+        flash("Only students can book tutors.", "danger")
+        return redirect(url_for('home'))
+
+    tutors = User.query.filter_by(role="tutor", status="approved").all()
+    today = datetime.now().date()
+    calendar_data = []
+
+    # Generate calendar data for the next 7 days
+    for i in range(7):
+        date = today + timedelta(days=i)
+        day_data = {"date": date.strftime("%Y-%m-%d"), "day_name": date.strftime("%A"), "slots": []}
+
+        for time in timeslots:
+            slot = {"time": time, "status": "available", "tutor": None}
+
+            # Check if the slot is already booked
+            existing_booking = Booking.query.filter_by(date=date, time=time).first()
+            if existing_booking:
+                slot["status"] = existing_booking.status
+                slot["tutor"] = existing_booking.tutor.name
+
+            # Check if the tutor has any bookings at this time
+            for tutor in tutors:
+                if not any(b for b in tutor.tutor_bookings if b.date == date and b.time == time):
+                    slot["status"] = "available"
+                else:
+                    slot["status"] = "unavailable"
+                    slot["tutor"] = tutor.name
+
+            day_data["slots"].append(slot)
+        calendar_data.append(day_data)
+
+    if request.method == 'POST':
+        selected_date = request.form.get('date')
+        selected_time = request.form.get('time')
+        tutor_id = request.form.get('tutor')
+
+        tutor = User.query.get(tutor_id)
+
+        if not selected_date or not selected_time or not tutor:
+            flash("Please select a valid date, time, and tutor.", "danger")
+            return redirect(url_for('booking'))
+
+        # Check if already booked
+        existing_booking = Booking.query.filter_by(user_id=current_user.id, date=selected_date, time=selected_time).first()
+        if existing_booking:
+            flash("You already have a booking at this time.", "warning")
+            return redirect(url_for('booking'))
+
+        # Create booking
+        new_booking = Booking(user_id=current_user.id, tutor_id=tutor.id, date=selected_date, time=selected_time, status="pending")
+        db.session.add(new_booking)
+        db.session.commit()
+
+        flash("Booking submitted! Waiting for tutor approval.", "info")
+        return redirect(url_for('calendar'))
+
+    return render_template('booking.html', calendar_data=calendar_data, tutors=tutors, timeslots=timeslots)
+
+
+# Calendar View
+@app.route('/calendar')
+@login_required
+def calendar():
+    if current_user.role != "student":
+        flash("Only students can access the calendar.", "danger")
+        return redirect(url_for('home'))
+
+    today = datetime.now().date()
+    calendar_data = []
+
+    for i in range(7):
+        date = today + timedelta(days=i)
+        day_data = {"date": date.strftime("%Y-%m-%d"), "day_name": date.strftime("%A"), "slots": []}
+
+        for time in timeslots:
+            slot = {"time": time, "status": "available", "tutor": None, "meeting_id": None}
+
+            booking = Booking.query.filter_by(user_id=current_user.id, date=date, time=time).first()
+            if booking:
+                slot["status"] = booking.status
+                slot["tutor"] = booking.tutor.name
+                slot["meeting_id"] = booking.meeting_id if booking.status == "approved" else None
+
+            day_data["slots"].append(slot)
+
+        calendar_data.append(day_data)
+
+    return render_template('calendar.html', calendar_data=calendar_data, timeslots=timeslots)
+
+# Tutor Dashboard
+@app.route('/tutor_dashboard')
+@login_required
+def tutor_dashboard():
+    if current_user.role != "tutor":
+        flash("Only tutors can access this page.", "danger")
+        return redirect(url_for('home'))
+
+    tutor_bookings = Booking.query.filter_by(tutor_id=current_user.id, status="pending").all()
+    return render_template('tutor_dashboard.html', bookings=tutor_bookings)
+
+# Approve or Decline Booking
+@app.route('/tutor_action/<int:booking_id>/<string:action>', methods=['POST'])
+@login_required
+def tutor_action(booking_id, action):
+    if current_user.role != "tutor":
+        return jsonify({"message": "Unauthorized"}), 401
+
+    booking = Booking.query.get(booking_id)
+    if not booking or booking.tutor_id != current_user.id:
+        return jsonify({"message": "Booking not found"}), 404
+
+    if action == "approve":
+        booking.status = "approved"
+        booking.meeting_id = generate_meeting_id()
+        notifications.append({
+            "user": booking.student.email,
+            "message": f"Your booking with {current_user.name} on {booking.date} at {booking.time} has been approved. Meeting ID: {booking.meeting_id}."
+        })
+        db.session.commit()
+        flash(f"Booking approved! Meeting ID: {booking.meeting_id}", "success")
+
+    elif action == "decline":
+        booking.status = "declined"
+        notifications.append({
+            "user": booking.student.email,
+            "message": f"Your booking with {current_user.name} on {booking.date} at {booking.time} has been declined."
+        })
+        db.session.commit()
+        flash("Booking declined.", "danger")
+
+    flash(f'Booking for {booking.student.name} on {booking.date} at {booking.time} has been {action}.', 'success')
+    return redirect(url_for('tutor_dashboard'))
+
+@app.route('/notifications')
+@login_required  # Ensures only logged-in users can access
+def notifications_page():
+    # Filter notifications for the logged-in user
+    user_notifications = [n for n in notifications if n["user"] == current_user.email]
+    
+    if not user_notifications:
+        flash('No notifications available.', 'info')
+
+    return render_template('notifications.html', notifications=user_notifications)
+
+
+
 @app.route('/logout')
+@login_required  # Ensures only logged-in users can access
 def logout():
-    session.pop('user_id', None)
-    session.pop('user_name', None)
+    logout_user()  # Logs out the user properly
     flash("You have been logged out!", "info")
     return redirect(url_for('home'))
 
 @app.route('/admin', methods=['GET', 'POST'])
+@login_required
 def admin_dashboard():
-    if 'user_id' not in session:
-        flash("You must be logged in as an admin to access this page.", "danger")
-        return redirect(url_for('auth', form_type="login"))
-
-    user = User.query.get(session['user_id'])
-    if not user or user.role != "admin":
+    if current_user.role != "admin":
         flash("Unauthorized access!", "danger")
         return redirect(url_for('home'))
 
     pending_tutors = User.query.filter_by(role="tutor", status="pending").all()
-
-    # Get all tutors & students for stats calculation
     all_tutors = User.query.filter_by(role="tutor").all()
     students = User.query.filter_by(role="student").all()
 
-    # Tutor & Student Statistics
-    total_tutors = len(all_tutors)
-    approved_tutors = sum(1 for tutor in all_tutors if tutor.status == "approved")
-    pending_tutors_count = len(pending_tutors)  # Only pending tutors
-    declined_tutors = sum(1 for tutor in all_tutors if tutor.status == "declined")
-    total_students = len(students)
-
     return render_template(
         'admin_dashboard.html',
-        tutors=pending_tutors,  # Only pending tutors appear in the table
-        total_tutors=total_tutors, 
-        approved_tutors=approved_tutors,
-        pending_tutors=pending_tutors_count, 
-        declined_tutors=declined_tutors,
-        total_students=total_students
+        tutors=pending_tutors,  
+        total_tutors=len(all_tutors), 
+        approved_tutors=sum(1 for tutor in all_tutors if tutor.status == "approved"),
+        pending_tutors=len(pending_tutors),  
+        declined_tutors=sum(1 for tutor in all_tutors if tutor.status == "declined"),
+        total_students=len(students)
     )
 
 @app.route('/approve_tutor/<int:user_id>')
+@login_required
 def approve_tutor(user_id):
-
-    if 'user_id' not in session:
-        flash("You must be logged in as an admin.", "danger")
-        return redirect(url_for('auth', form_type="login"))
-
-    admin = User.query.get(session['user_id'])
-    if not admin or admin.role != "admin":
+    if current_user.role != "admin":
         flash("Unauthorized action!", "danger")
         return redirect(url_for('home'))
 
@@ -167,11 +335,24 @@ def approve_tutor(user_id):
                        "Your tutor application has been approved. You can now log in.")
             flash(f"Tutor {tutor.name} approved!", "success")
         else:
-            tutor.status = "declined"
-            db.session.commit()
-            send_email(tutor.email, "Tutor Application Declined", 
-                       "Your tutor application has been declined due to an insufficient average grade.")
-            flash(f"Tutor {tutor.name} declined!", "danger")
+            flash(f"Tutor {tutor.name} does not meet the grade requirement.", "danger")
+
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/decline_tutor/<int:user_id>')
+@login_required
+def decline_tutor(user_id):
+    if current_user.role != "admin":
+        flash("Unauthorized action!", "danger")
+        return redirect(url_for('home'))
+
+    tutor = User.query.get(user_id)
+    if tutor and tutor.role == "tutor":
+        tutor.status = "declined"
+        db.session.commit()
+        send_email(tutor.email, "Tutor Application Declined", 
+                   "Your tutor application has been declined due to an insufficient average grade.")
+        flash(f"Tutor {tutor.name} declined!", "danger")
 
     return redirect(url_for('admin_dashboard'))
 
