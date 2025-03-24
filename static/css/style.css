@@ -180,44 +180,41 @@ nav a:hover {
 
 .file-upload-container #delete-file-btn {
     position: absolute;
-    right: 10px; /* Adjust to place the icon further inside the input field */
+    right: 10px; 
     top: 40%;
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    display: none;  /* Hidden by default */
-    opacity: 1; /* Make the icon more visible */
+    display: none;  
+    opacity: 1; 
     transition: opacity 0.3s ease;
 }
 
 .file-upload-container #delete-file-btn:hover {
-    opacity: 1;  /* Make the icon fully visible when hovered */
+    opacity: 1;  
 }
 
 .file-upload-container #delete-file-btn::before {
     content: "";
     display: block;
-    background-image: url('https://img.icons8.com/?size=100&id=47259&format=png&color=000000'); /* Replace with your bin icon URL */
+    background-image: url('https://img.icons8.com/?size=100&id=47259&format=png&color=000000'); 
     background-size: contain;
     background-repeat: no-repeat;
-    width: 24px;  /* Adjust size of the icon */
-    height: 24px; /* Adjust size of the icon */
+    width: 24px;  
+    height: 24px; 
 }
 
 .file-upload-container.has-file #delete-file-btn {
-    display: inline-block; /* Show the delete button when a file is uploaded */
+    display: inline-block; 
 }
 
 .file-upload-container #file-name {
-    display: none; /* Hide file name text */
+    display: none; 
 }
 
-
-/* Style for modal (popup) */
 .modal {
     display: none;
-    /* Hidden by default */
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -225,7 +222,7 @@ nav a:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    /* Dark overlay */
+
 }
 
 .modal-content {

@@ -40,20 +40,20 @@
         fileInput.addEventListener("change", function() {
             if (fileInput.files.length > 0) {
                 fileNameSpan.textContent = fileInput.files[0].name;
-                deleteButton.style.display = "inline-block"; // Show the delete button
-                fileUploadContainer.classList.add('has-file');  // Add class to show delete button
+                deleteButton.style.display = "inline-block"; 
+                fileUploadContainer.classList.add('has-file');  
             }
         });
 
-        // Function to delete the file selection (without API call)
+        
         window.deleteFile = function() {
-            fileNameSpan.textContent = ""; // Clear displayed filename
-            deleteButton.style.display = "none"; // Hide delete button
-            fileInput.value = ""; // Reset file input
-            fileUploadContainer.classList.remove('has-file'); // Remove the class to hide delete button
+            fileNameSpan.textContent = ""; 
+            deleteButton.style.display = "none"; 
+            fileInput.value = ""; 
+            fileUploadContainer.classList.remove('has-file'); 
         };
 
-            // Real-time email validation for the format @dut4life.ac.za
+           
             var emailInput = document.getElementById("email");
             var emailError = document.getElementById("email-error");
 
@@ -65,7 +65,7 @@
                     emailError.textContent = "Email must end with @dut4life.ac.za";
                     emailError.style.color = "red";
                 } else {
-                    emailError.textContent = ""; // Clear the error message when valid
+                    emailError.textContent = ""; 
                 }
             });
         });

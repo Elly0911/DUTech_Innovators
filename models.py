@@ -23,12 +23,12 @@ class User(db.Model, UserMixin):
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Student who booked
-    tutor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Tutor assigned
-    date = db.Column(db.String(20), nullable=False)  # Booking date (YYYY-MM-DD)
-    time = db.Column(db.String(10), nullable=False)  # Time slot (e.g., "10:00 AM")
-    status = db.Column(db.String(20), default="pending")  # 'pending', 'approved', 'declined'
-    meeting_id = db.Column(db.String(20), nullable=True)  # If approved, generate meeting ID
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  
+    tutor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  
+    date = db.Column(db.String(20), nullable=False)  
+    time = db.Column(db.String(10), nullable=False)  
+    status = db.Column(db.String(20), default="pending")  
+    meeting_id = db.Column(db.String(20), nullable=True)  
 
     def __repr__(self):
         return f"Booking('{self.id}', Student: '{self.user_id}', Tutor: '{self.tutor_id}', Status: '{self.status}')"

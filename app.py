@@ -17,9 +17,8 @@ app.config.from_object(Config)
 
 db.init_app(app)
 migrate = Migrate(app, db)
-mail = Mail(app)  # Initialize Flask-Mail
+mail = Mail(app)  
 
-# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "auth"
@@ -30,7 +29,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Function to send emails
 def send_email(recipient, subject, body):
     msg = Message(subject, recipients=[recipient], sender=app.config['MAIL_USERNAME'])
     msg.body = body
@@ -58,15 +56,15 @@ def auth(form_type="login"):
     login_form = LoginForm()
     signup_form = SignupForm()
 
-    # Handle login form submission
+    
     if login_form.validate_on_submit() and form_type == "login":
         email = login_form.email.data
         password = login_form.password.data
         user = User.query.filter_by(email=email).first()
 
-        # Check if user exists and password matches
+        
         if user and check_password_hash(user.password, password):
-            # Handle status for tutors
+            
             if user.role == "tutor":
                 if user.status == "pending":
                     flash("Your tutor account is pending approval.", "warning")
@@ -75,24 +73,24 @@ def auth(form_type="login"):
                     flash("Your tutor application has been declined.", "danger")
                     return redirect(url_for('auth', form_type="login"))
             
-            # Logs in the user using Flask-Login
+            
             login_user(user)
             flash("Login successful!", "success")
 
-            # Redirect students directly to booking page
+            
             if user.role == "student":
-                return redirect(url_for('booking'))  # Redirect students to booking
+                return redirect(url_for('booking'))  
             
             # Redirect approved tutors to the tutor dashboard
             if user.role == "tutor" and user.status == "approved":
-                return redirect(url_for('tutor_dashboard'))  # Redirect tutors to their dashboard
+                return redirect(url_for('tutor_dashboard'))  
 
             # Redirect admin to admin dashboard or home for others
             return redirect(url_for('admin_dashboard') if user.role == "admin" else url_for('home'))
         else:
             flash("Invalid email or password", "danger")
 
-    # Handle signup form submission
+    
     if signup_form.validate_on_submit() and form_type == "signup":
         existing_user = User.query.filter_by(email=signup_form.email.data).first()
         if existing_user:
@@ -124,12 +122,12 @@ def auth(form_type="login"):
         db.session.add(new_user)
         db.session.commit()
 
-        # Send pending notification email to tutor
+        
         if new_user.role == "tutor":
             send_email(new_user.email, "Tutor Application Pending", 
                        "Your tutor application is pending approval. You will be notified once it is reviewed.")
 
-        # Flash success messages
+        
         if new_user.role == "tutor":
             flash("Signup successful! Your tutor application is pending approval.", "info")
         else:
@@ -281,7 +279,7 @@ def tutor_action(booking_id, action):
 @app.route('/notifications')
 @login_required  # Ensures only logged-in users can access
 def notifications_page():
-    # Filter notifications for the logged-in user
+    
     user_notifications = [n for n in notifications if n["user"] == current_user.email]
     
     if not user_notifications:
@@ -294,7 +292,7 @@ def notifications_page():
 @app.route('/logout')
 @login_required  # Ensures only logged-in users can access
 def logout():
-    logout_user()  # Logs out the user properly
+    logout_user()  
     flash("You have been logged out!", "info")
     return redirect(url_for('home'))
 
@@ -356,7 +354,7 @@ def decline_tutor(user_id):
 
     return redirect(url_for('admin_dashboard'))
 
-# Route to download academic record
+
 @app.route('/uploads/<filename>')
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
