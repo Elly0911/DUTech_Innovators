@@ -17,7 +17,9 @@ class User(db.Model, UserMixin):
     # Relationships for bookings (student and tutor)
     bookings = db.relationship('Booking', foreign_keys='Booking.user_id', backref='student', lazy=True)
     tutor_bookings = db.relationship('Booking', foreign_keys='Booking.tutor_id', backref='tutor', lazy=True)
-
+    def is_admin(self):
+        return self.role == 'admin'
+    
     def __repr__(self):
         return f"User('{self.id}', '{self.name}', '{self.role}')"
 

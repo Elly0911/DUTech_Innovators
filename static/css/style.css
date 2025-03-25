@@ -6,6 +6,29 @@ nav {
     align-items: center;
 }
 
+
+/* Profile link styling */
+.profile-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: inherit;
+    padding: 5px 10px;
+    transition: color 0.2s;
+}
+
+.profile-link:hover {
+    color: #3F51B5;
+}
+
+.profile-link i {
+    font-size: 16px;
+}
+
+/* Make sure to add Font Awesome for the icon */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
 .user-icon {
     width: 30px;
     height: 30px;
@@ -30,7 +53,19 @@ nav {
     justify-content: flex-end;
     position: relative;
 }
+/* Month name formatting */
+.session-date .month {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
 
+/* Date display formatting */
+.session-date .day {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
 .dropdown-content {
     display: none;
     position: absolute;

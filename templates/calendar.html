@@ -1,43 +1,85 @@
-{% extends 'base.html' %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+    }
+    .calendar-container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    .slot-card {
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        font-size: 16px;
+    }
+    .available { background-color: #d4edda; color: #155724; }
+    .pending { background-color: #fff3cd; color: #856404; }
+    .approved { background-color: #cce5ff; color: #004085; }
+    .declined { background-color: #f8d7da; color: #721c24; }
+    .time-header {
+        font-weight: bold;
+        padding-bottom: 10px;
+    }
+    .view-notifications-btn {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
 
-{% block content %}
+    .navigation-btn{
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+ 
+</style>
+
+<div class="calendar-container">
     <h1>My Calendar</h1>
-
-    <!-- Calendar Table -->
-    <table>
-        <!-- Header Row (Days of the Week) -->
-        <tr>
-            <th></th>
-            {% for day in calendar_data %}
-                <th class="day-header">{{ day.day_name }}<br>{{ day.date }}</th>
+    <div class="bento-grid">
+        {% for day in calendar_data %}
+            {% for slot in day.slots %}
+                {% if slot.status in ["pending", "approved", "declined"] %}
+                    <div class="slot-card {{ slot.status }}">
+                        <div class="time-header">{{ day.day_name }} - {{ day.date }}<br>{{ slot.time }}</div>
+                        <div class="status">{{ slot.status|capitalize }}</div>
+                        {% if slot.status == "approved" %}
+                            <div>Meeting ID: {{ slot.meeting_id }}</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% endfor %}
-        </tr>
-
-        <!-- Time Slots Rows -->
-        {% for time in timeslots %}
-            <tr>
-                <td class="time-header">{{ time }}</td>
-                {% for day in calendar_data %}
-                    <td class="slot {{ day.slots[timeslots.index(time)].status }}">
-                        <div class="slot">
-                            {% if day.slots[timeslots.index(time)].status == "available" %}
-                                <span class="available">Available</span>
-                            {% elif day.slots[timeslots.index(time)].status == "pending" %}
-                                <span class="pending">Pending Approval</span>
-                            {% elif day.slots[timeslots.index(time)].status == "approved" %}
-                                <span class="approved">Approved<br>Meeting ID: {{ day.slots[timeslots.index(time)].meeting_id }}</span>
-                            {% elif day.slots[timeslots.index(time)].status == "declined" %}
-                                <span class="declined">Declined</span>
-                            {% else %}
-                                <span class="unavailable">Unavailable</span>
-                            {% endif %}
-                        </div>
-                    </td>
-                {% endfor %}
-            </tr>
         {% endfor %}
-    </table>
-
-    <!-- View Notifications Button -->
+    </div>
     <a href="{{ url_for('notifications_page') }}" class="view-notifications-btn">View Notifications</a>
-{% endblock %}
+    <a href="{{ url_for('booking') }}" class="navigation-btn">Go to Booking Page</a>
+
+</div>

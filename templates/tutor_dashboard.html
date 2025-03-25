@@ -1,36 +1,275 @@
 {% extends 'base.html' %}
-
 {% block content %}
-    <h1>Tutor Dashboard</h1>
 
-    <!-- Bookings Table -->
-    <table class="tutor-dashboard-table">
-        <tr>
-            <th>User</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-        {% for booking in bookings %}
-                <tr>
-                    <td>{{ booking.student.name }}</td>
-                    <td>{{ booking.date }}</td>
-                    <td>{{ booking.time }}</td>
-                    <td>{{ booking.status.capitalize() }}</td>
-                    <td>
-                        {% if booking.status == "pending" %}
-                            <!-- Approve Button -->
-                            <form method="POST" action="{{ url_for('tutor_action', booking_id=booking.id, action='approve') }}">
-                                <button type="submit" class="approve-btn">Approve</button>
-                            </form>
-                            <!-- Decline Button -->
-                            <form method="POST" action="{{ url_for('tutor_action', booking_id=booking.id, action='decline') }}">
-                                <button type="submit" class="decline-btn">Decline</button>
-                            </form>
-                        {% endif %}
-                    </td>
-                </tr>
-        {% endfor %}
-    </table>
+<style>
+.session-date {
+    background: #4a90e2;
+    color: white;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-right: 1.5rem;
+    text-align: center;
+}
+
+.session-date .day {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.session-date .month {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+</style>
+
+<div class="container tutor-dashboard">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>Welcome, {{ current_user.name }}</h1>
+        <div class="stats-container">
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <h3>{{ bookings|length }}</h3>
+                <p>Pending Requests</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle"></i>
+                <h3>{{ upcoming_sessions|length }}</h3>
+                <p>Upcoming Sessions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Requests Section -->
+    <div class="bookings-section">
+        <h2><i class="fas fa-list-alt"></i> Pending Booking Requests</h2>
+        {% if bookings %}
+        <div class="booking-list">
+            {% for booking in bookings %}
+            <div class="booking-card">
+                <div class="booking-info">
+                    <div class="student-avatar">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="booking-details">
+                        <h3>{{ booking.student.name }}</h3>
+                        <div class="meta">
+                            <span class="date"><i class="fas fa-calendar-day"></i> {{ booking.date }}</span>
+                            <span class="time"><i class="fas fa-clock"></i> {{ booking.time }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="booking-actions">
+                    <form method="POST" action="{{ url_for('tutor_action', booking_id=booking.id, action='approve') }}">
+                        <button type="submit" class="btn approve-btn">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('tutor_action', booking_id=booking.id, action='decline') }}">
+                        <button type="submit" class="btn decline-btn">
+                            <i class="fas fa-times"></i> Decline
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>No pending requests</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Upcoming Sessions -->
+    <div class="sessions-section">
+        <h2><i class="fas fa-calendar-alt"></i> Upcoming Sessions</h2>
+        {% if upcoming_sessions %}
+        <div class="session-cards">
+            {% for session in upcoming_sessions %}
+            <div class="session-card">
+                <div class="session-date">
+                    <div class="day">{{ session.date.split('-')[-1] }}</div>
+                    <div class="month">{{ session.date.split('-')[1] }}</div>
+                </div>
+                <div class="session-details">
+                    <h3>{{ session.student.name }}</h3>
+                    <p class="time"><i class="fas fa-clock"></i> {{ session.time }}</p>
+                    <p class="meeting-id"><i class="fas fa-video"></i> {{ session.meeting_id }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-plus"></i>
+            <p>No upcoming sessions</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<style>
+    /* Base Bento Grid Styles */
+    .tutor-dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 2rem;
+    }
+    
+    /* Stats Container */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card i {
+        font-size: 2rem;
+        color: #4a90e2;
+        margin-bottom: 1rem;
+    }
+    
+    /* Booking Cards */
+    .booking-list {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    
+    .booking-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+    }
+    
+    .booking-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    /* Session Cards */
+    .session-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .session-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+    }
+    
+    /* Date Badge */
+    .session-date {
+        background: #4a90e2;
+        color: white;
+        padding: 0.8rem;
+        border-radius: 12px;
+        width: fit-content;
+        margin-bottom: 1rem;
+    }
+    
+    /* Action Buttons */
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .approve-btn {
+        background: #4CAF50;
+        color: white;
+    }
+    
+    .approve-btn:hover {
+        background: #43A047;
+    }
+    
+    .decline-btn {
+        background: #f44336;
+        color: white;
+    }
+    
+    .decline-btn:hover {
+        background: #E53935;
+    }
+    
+    /* Empty States */
+    .empty-state {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .tutor-dashboard {
+            grid-template-columns: 1fr;
+            padding: 1rem;
+        }
+        
+        .booking-card, .session-card {
+            width: 100%;
+        }
+    }
+    
+    /* Micro-interactions */
+    .meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .student-avatar {
+        background: #f0f4ff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .meeting-id {
+        background: #e3f2fd;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+    </style>
 {% endblock %}

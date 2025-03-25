@@ -1,25 +1,95 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Booking Page</h1>
+<div class="container mt-4">
+    <h1 class="mb-4">Book a Tutor Session</h1>
+
+    <a href="{{ url_for('calendar') }}" class="btn btn-secondary mb-4">View My Calendar</a>
+
+    <!-- Calendar Display -->
+    <div class="row mb-4">
+        {% for day in calendar_data %}
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title">{{ day.day_name }}</h5>
+                    <p class="card-text">{{ day.date }}</p>
+                </div>
+                <div class="card-body">
+                    {% for slot in day.slots %}
+                    <div class="mb-2">
+                        <span class="me-2">{{ slot.time }}</span>
+                        {% if slot.status == "available" %}
+                            <span class="badge bg-success" title="Tutor: {{ slot.tutor }}">Available</span>
+                        {% elif slot.status == "pending" %}
+                            <span class="badge bg-info">Pending</span>
+                        {% elif slot.status == "unavailable" or slot.status == "approved" %}
+                            <span class="badge bg-danger">Unavailable</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 
     <!-- Booking Form -->
-    <form action="{{ url_for('booking') }}" method="post">
-        <label for="date">Select Date:</label>
-        <input type="date" id="date" name="date" required><br><br>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="{{ url_for('booking') }}" method="post">
+                <!-- Date Selection -->
+                <div class="form-group mb-3">
+                    <label for="date" class="form-label">Select Date:</label>
+                    <input type="date" id="date" name="date" class="form-control" required min="{{ today.strftime('%Y-%m-%d') }}">
+                </div>
 
-        <label for="time">Select Time:</label>
-        <input type="time" id="time" name="time" min="08:00" max="20:00" required><br><br>
+                <!-- Time Selection -->
+                <div class="form-group mb-3">
+                    <label for="time" class="form-label">Select Time:</label>
+                    <select id="time" name="time" class="form-select" required>
+                        {% for time in timeslots %}
+                        <option value="{{ time }}">{{ time }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-        <label for="tutor">Select Tutor:</label>
-        <select id="tutor" name="tutor" required>
-            {% for tutor in tutors %}
-            <option value="{{ tutor.id }}" {% if tutor.status != 'approved' %}disabled{% endif %}>
-                {{ tutor.name }} ({{ "Available" if tutor.status == 'approved' else "Unavailable" }})
-              </option>
-            {% endfor %}
-        </select><br><br>
+                <!-- Tutor Selection -->
+                <div class="form-group mb-3">
+                    <label for="tutor" class="form-label">Select Tutor:</label>
+                    <select id="tutor" name="tutor" class="form-select" required>
+                        {% for tutor in tutors %}
+                        <option value="{{ tutor.id }}" 
+                                title="Department: {{ tutor.department }}"
+                                {% if tutor.status != 'approved' %}disabled{% endif %}>
+                            {{ tutor.name }} ({{ tutor.department }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-        <button type="submit">Book Slot</button>
-    </form>
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary w-100">Book Session</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    // Enable tooltips for tutor names
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    // Enable popovers for tutor names
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl)
+    })
+</script>
 {% endblock %}

@@ -1,81 +1,601 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Admin Dashboard</h2>
+<div class="admin-dashboard">
+    <h2 class="dashboard-title">Admin Dashboard</h2>
 
-<!-- Display Statistics -->
-<div class="stats-container">
-    <h3>Platform Statistics</h3>
-    <p><strong>Total Tutors:</strong> {{ total_tutors }}</p>
-    <p><strong>Approved Tutors:</strong> {{ approved_tutors }}</p>
-    <p><strong>Pending Tutors:</strong> {{ pending_tutors }}</p>
-    <p><strong>Declined Tutors:</strong> {{ declined_tutors }}</p>
-    <p><strong>Total Students:</strong> {{ total_students }}</p>
+    <!-- Dashboard Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_tutors }}</h3>
+                <p>Total Tutors</p>
+            </div>
+        </div>
+
+        <div class="stat-card approved">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ approved_tutors }}</h3>
+                <p>Approved Tutors</p>
+            </div>
+        </div>
+
+        <div class="stat-card pending">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ pending_tutors }}</h3>
+                <p>Pending Tutors</p>
+            </div>
+        </div>
+
+        <div class="stat-card declined">
+            <div class="stat-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ declined_tutors }}</h3>
+                <p>Declined Tutors</p>
+            </div>
+        </div>
+
+        <div class="stat-card students">
+            <div class="stat-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_students }}</h3>
+                <p>Total Students</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <div class="chart-container">
+            <h3>Tutor Status Distribution</h3>
+            <canvas id="tutorStatusChart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h3>User Growth (Last 30 Days)</h3>
+            <canvas id="userGrowthChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Pending Tutor Approval Section -->
+    <div class="approval-section">
+        <div class="section-header">
+            <h3>Pending Tutor Approvals</h3>
+            <span class="badge">{{ tutors|length }}</span>
+        </div>
+
+        {% if tutors %}
+        <div class="table-responsive">
+            <table class="approval-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Average Grade</th>
+                        <th>Academic Record</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tutor in tutors %}
+                    <tr>
+                        <td>{{ tutor.name }}</td>
+                        <td>{{ tutor.email }}</td>
+                        <td>
+                            <span class="grade-badge">{{ tutor.average_grade }}</span>
+                        </td>
+                        <td>
+                            {% if tutor.result_document %}
+                                <button class="preview-btn" onclick="openModal('{{ tutor.id }}', `{{ url_for('download_file', filename=tutor.result_document) }}`)">
+                                    <i class="fas fa-file-pdf"></i> View Document
+                                </button>
+                            {% else %}
+                                <span class="no-file">No file uploaded</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions">
+                            <a href="{{ url_for('approve_tutor', user_id=tutor.id) }}" class="btn btn-success">
+                                <i class="fas fa-check"></i> Approve
+                            </a>
+                            <a href="{{ url_for('decline_tutor', user_id=tutor.id) }}" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Decline
+                            </a>
+                            <button class="btn btn-info" onclick="showMoreInfo('{{ tutor.id }}')">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </td>
+                    </tr>
+                    <tr id="more-info-{{ tutor.id }}" class="more-info-row" style="display: none;">
+                        <td colspan="6">
+                            <div class="additional-info">
+                                <p><strong>Subjects:</strong> {{ tutor.subjects|join(', ') }}</p>
+                                <p><strong>Education Level:</strong> {{ tutor.education_level }}</p>
+                                <p><strong>Teaching Experience:</strong> {{ tutor.teaching_experience }} years</p>
+                                <p><strong>Bio:</strong> {{ tutor.bio|truncate(150) }}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>No tutors pending approval. All caught up!</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
-
-<!-- Pending Tutor Approval Section -->
-{% if tutors %}
-    <h3>Pending Tutor Approvals</h3>
-    <table border="1">
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Average Grade</th>
-            <th>Academic Record</th>
-            <th>Actions</th>
-        </tr>
-
-        {% for tutor in tutors %}
-        <tr>
-            <td>{{ tutor.name }}</td>
-            <td>{{ tutor.email }}</td>
-            <td>{{ tutor.average_grade }}</td>
-            <td>
-                {% if tutor.result_document %}
-                    <button onclick="openModal('{{ tutor.id }}', `{{ url_for('download_file', filename=tutor.result_document) }}`)">
-                        Preview Academic Record
-                    </button>
-                {% else %}
-                    No file uploaded
-                {% endif %}
-            </td>
-            <td>
-                <a href="{{ url_for('approve_tutor', user_id=tutor.id) }}" class="btn btn-success">Approve</a>
-                <a href="{{ url_for('decline_tutor', user_id=tutor.id) }}" class="btn btn-danger">Decline</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-{% else %}
-    <p>No tutors pending approval.</p>
-{% endif %}
 
 <!-- Modal for PDF Preview -->
 <div id="pdfModal" class="modal">
     <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <iframe id="pdfFrame"></iframe>
+        <div class="modal-header">
+            <h4>Academic Record Preview</h4>
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <iframe id="pdfFrame"></iframe>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="downloadPdf()">
+                <i class="fas fa-download"></i> Download
+            </button>
+        </div>
     </div>
 </div>
 
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
 <script>
+    // Function to show/hide additional tutor info
+    function showMoreInfo(tutorId) {
+        const row = document.getElementById(`more-info-${tutorId}`);
+        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    }
+
+    // PDF Modal functions
+    let currentPdfUrl = '';
+    
     function openModal(id, pdfUrl) {
-        var modal = document.getElementById('pdfModal');
-        var pdfFrame = document.getElementById('pdfFrame');
-        pdfFrame.src = pdfUrl;
-        modal.style.display = 'block';
+        currentPdfUrl = pdfUrl;
+        document.getElementById('pdfModal').style.display = 'block';
+        document.getElementById('pdfFrame').src = pdfUrl;
     }
 
     function closeModal() {
         document.getElementById('pdfModal').style.display = 'none';
+        document.getElementById('pdfFrame').src = '';
+    }
+
+    function downloadPdf() {
+        if (currentPdfUrl) {
+            window.open(currentPdfUrl, '_blank');
+        }
     }
 
     window.onclick = function(event) {
-        var modal = document.getElementById('pdfModal');
-        if (event.target == modal) {
+        if (event.target == document.getElementById('pdfModal')) {
             closeModal();
         }
     }
+
+    // Initialize Charts
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tutor Status Chart
+        const tutorStatusCtx = document.getElementById('tutorStatusChart').getContext('2d');
+        const tutorStatusChart = new Chart(tutorStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Approved', 'Pending', 'Declined'],
+                datasets: [{
+                    data: [{{ approved_tutors }}, {{ pending_tutors }}, {{ declined_tutors }}],
+                    backgroundColor: [
+                        '#4CAF50',
+                        '#FFC107',
+                        '#F44336'
+                    ],
+                    borderWidth: 1
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = context.raw || 0;
+                                const percentage = Math.round((value / total) * 100);
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // User Growth Chart (sample data - replace with actual data from your backend)
+        const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+        const userGrowthChart = new Chart(userGrowthCtx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 5', 'Day 10', 'Day 15', 'Day 20', 'Day 25', 'Day 30'],
+                datasets: [
+                    {
+                        label: 'Tutors',
+                        data: [5, 15, 25, 40, 50, 65, 80],
+                        borderColor: '#3F51B5',
+                        backgroundColor: 'rgba(63, 81, 181, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Students',
+                        data: [10, 30, 50, 80, 120, 150, 200],
+                        borderColor: '#9C27B0',
+                        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+    });
 </script>
 
+<style>
+    /* Dashboard Styles */
+    .admin-dashboard {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .dashboard-title {
+        color: #333;
+        margin-bottom: 30px;
+        font-weight: 600;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 24px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: white;
+    }
+    
+    .stat-card .stat-icon {
+        background: #3F51B5;
+    }
+    
+    .stat-card.approved .stat-icon {
+        background: #4CAF50;
+    }
+    
+    .stat-card.pending .stat-icon {
+        background: #FFC107;
+    }
+    
+    .stat-card.declined .stat-icon {
+        background: #F44336;
+    }
+    
+    .stat-card.students .stat-icon {
+        background: #9C27B0;
+    }
+    
+    .stat-info h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+    }
+    
+    .stat-info p {
+        margin: 5px 0 0;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    /* Charts Section */
+    .charts-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .chart-container h3 {
+        margin-top: 0;
+        color: #444;
+        font-size: 16px;
+    }
+    
+    /* Approval Section */
+    .approval-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        color: #444;
+    }
+    
+    .section-header .badge {
+        background: #FFC107;
+        color: white;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        margin-left: 10px;
+    }
+    
+    /* Table Styles */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .approval-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .approval-table th {
+        background: #f5f5f5;
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 500;
+        color: #555;
+    }
+    
+    .approval-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+    
+    .approval-table tr:hover {
+        background: #f9f9f9;
+    }
+    
+    .grade-badge {
+        background: #E3F2FD;
+        color: #1976D2;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .preview-btn {
+        background: #E3F2FD;
+        color: #1976D2;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+    }
+    
+    .preview-btn:hover {
+        background: #BBDEFB;
+    }
+    
+    .no-file {
+        color: #999;
+        font-style: italic;
+        font-size: 13px;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .actions .btn {
+        padding: 5px 10px;
+        font-size: 13px;
+    }
+    
+    .more-info-row {
+        background: #f9f9f9;
+    }
+    
+    .additional-info {
+        padding: 10px;
+        font-size: 14px;
+        color: #555;
+    }
+    
+    .additional-info p {
+        margin: 5px 0;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+    }
+    
+    .empty-state i {
+        font-size: 50px;
+        margin-bottom: 15px;
+        color: #4CAF50;
+    }
+    
+    .empty-state p {
+        font-size: 16px;
+        margin: 0;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        width: 80%;
+        max-width: 900px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+        background: #3F51B5;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h4 {
+        margin: 0;
+    }
+    
+    .close-btn {
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close-btn:hover {
+        color: #ddd;
+    }
+    
+    .modal-body {
+        padding: 0;
+        height: 500px;
+    }
+    
+    .modal-body iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    
+    .modal-footer {
+        padding: 10px 20px;
+        background: #f5f5f5;
+        text-align: right;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 992px) {
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .actions {
+            flex-direction: column;
+        }
+        
+        .modal-content {
+            width: 95%;
+            margin: 2% auto;
+        }
+    }
+</style>
 {% endblock %}
