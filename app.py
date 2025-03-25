@@ -137,7 +137,6 @@ def auth(form_type="login"):
 
     return render_template('auth.html', form_type=form_type, login_form=login_form, signup_form=signup_form)
 
-# Booking Page
 @app.route('/booking', methods=['GET', 'POST'])
 @login_required
 def booking():
@@ -146,7 +145,7 @@ def booking():
         return redirect(url_for('home'))
 
     tutors = User.query.filter_by(role="tutor", status="approved").all()
-    today = datetime.now().date()
+    today = datetime.now().date()  # Define today
     calendar_data = []
 
     # Generate calendar data for the next 7 days
@@ -160,18 +159,20 @@ def booking():
             # Check if the slot is already booked
             existing_booking = Booking.query.filter_by(date=date, time=time).first()
             if existing_booking:
-                slot["status"] = existing_booking.status
-                slot["tutor"] = existing_booking.tutor.name
+                # Update the slot status based on existing booking
+                if existing_booking.status == "approved":
+                    slot["status"] = "unavailable"  # Booked and confirmed
+                elif existing_booking.status == "pending":
+                    slot["status"] = "pending"  # Pending bookings remain pending
+                elif existing_booking.status == "declined":
+                    slot["status"] = "available"  # Declined booking means slot is available again
 
-            # Check if the tutor has any bookings at this time
-            for tutor in tutors:
-                if not any(b for b in tutor.tutor_bookings if b.date == date and b.time == time):
-                    slot["status"] = "available"
-                else:
-                    slot["status"] = "unavailable"
-                    slot["tutor"] = tutor.name
+                # Ensure tutor is properly referenced
+                slot["tutor"] = existing_booking.tutor.name if existing_booking.tutor else "Unknown Tutor"
 
+            # Append the slot data
             day_data["slots"].append(slot)
+
         calendar_data.append(day_data)
 
     if request.method == 'POST':
@@ -191,7 +192,7 @@ def booking():
             flash("You already have a booking at this time.", "warning")
             return redirect(url_for('booking'))
 
-        # Create booking
+        # Create booking with "pending" status
         new_booking = Booking(user_id=current_user.id, tutor_id=tutor.id, date=selected_date, time=selected_time, status="pending")
         db.session.add(new_booking)
         db.session.commit()
@@ -199,10 +200,9 @@ def booking():
         flash("Booking submitted! Waiting for tutor approval.", "info")
         return redirect(url_for('calendar'))
 
-    return render_template('booking.html', calendar_data=calendar_data, tutors=tutors, timeslots=timeslots)
+    return render_template('booking.html', calendar_data=calendar_data, tutors=tutors, timeslots=timeslots, today=today)
 
 
-# Calendar View
 @app.route('/calendar')
 @login_required
 def calendar():
@@ -210,27 +210,45 @@ def calendar():
         flash("Only students can access the calendar.", "danger")
         return redirect(url_for('home'))
 
-    today = datetime.now().date()
+    today = datetime.now().date()  # Define today
     calendar_data = []
 
     for i in range(7):
         date = today + timedelta(days=i)
-        day_data = {"date": date.strftime("%Y-%m-%d"), "day_name": date.strftime("%A"), "slots": []}
+        day_data = {
+            "date": date.strftime("%Y-%m-%d"),
+            "day_name": date.strftime("%A"),
+            "slots": []
+        }
 
         for time in timeslots:
-            slot = {"time": time, "status": "available", "tutor": None, "meeting_id": None}
+            # Default available slot
+            slot = {
+                "time": time,
+                "status": "available",
+                "tutor": None,
+                "meeting_id": None
+            }
 
-            booking = Booking.query.filter_by(user_id=current_user.id, date=date, time=time).first()
+            # Find bookings for this student
+            booking = Booking.query.filter_by(
+                user_id=current_user.id,  # Matches your schema's user_id field
+                date=date.strftime("%Y-%m-%d"),  # Match string format
+                time=time
+            ).first()
+
             if booking:
                 slot["status"] = booking.status
-                slot["tutor"] = booking.tutor.name
-                slot["meeting_id"] = booking.meeting_id if booking.status == "approved" else None
+                # Access tutor through relationship
+                slot["tutor"] = booking.tutor.name if booking.tutor else "Unknown Tutor"
+                slot["meeting_id"] = booking.meeting_id  # If you have this field, display it
 
             day_data["slots"].append(slot)
 
         calendar_data.append(day_data)
 
-    return render_template('calendar.html', calendar_data=calendar_data, timeslots=timeslots)
+    return render_template('calendar.html', calendar_data=calendar_data, today=today)
+
 
 # Tutor Dashboard
 @app.route('/tutor_dashboard')
@@ -240,9 +258,23 @@ def tutor_dashboard():
         flash("Only tutors can access this page.", "danger")
         return redirect(url_for('home'))
 
-    tutor_bookings = Booking.query.filter_by(tutor_id=current_user.id, status="pending").all()
-    return render_template('tutor_dashboard.html', bookings=tutor_bookings)
+    # Get pending bookings
+    pending_bookings = Booking.query.filter_by(
+        tutor_id=current_user.id,
+        status="pending"
+    ).all()
 
+    # Get approved upcoming sessions (sorted by date)
+    upcoming_sessions = Booking.query.filter_by(
+        tutor_id=current_user.id,
+        status="approved"
+    ).order_by(Booking.date).limit(3).all()
+
+    return render_template(
+        'tutor_dashboard.html',
+        bookings=pending_bookings,
+        upcoming_sessions=upcoming_sessions
+    )
 # Approve or Decline Booking
 @app.route('/tutor_action/<int:booking_id>/<string:action>', methods=['POST'])
 @login_required
@@ -275,6 +307,66 @@ def tutor_action(booking_id, action):
 
     flash(f'Booking for {booking.student.name} on {booking.date} at {booking.time} has been {action}.', 'success')
     return redirect(url_for('tutor_dashboard'))
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    # Get user's bookings for the profile view
+    if current_user.role == "student":
+        bookings = Booking.query.filter_by(user_id=current_user.id).order_by(Booking.date.desc()).limit(5).all()
+    elif current_user.role == "tutor":
+        bookings = Booking.query.filter_by(tutor_id=current_user.id).order_by(Booking.date.desc()).limit(5).all()
+    else:
+        bookings = []
+    
+    return render_template('profile.html', bookings=bookings)
+
+@app.route('/get_user_profile/<int:user_id>')
+@login_required
+def get_user_profile(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    profile_data = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "average_grade": user.average_grade,
+        "department": user.department,
+        "status": user.status
+    }
+    
+    return jsonify(profile_data)
+
+@app.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    data = request.get_json()
+    
+    # Verify current password if changing sensitive data
+    if 'current_password' in data and data['current_password']:
+        if not check_password_hash(current_user.password, data['current_password']):
+            return jsonify({"error": "Current password is incorrect"}), 400
+    
+    # Update user data
+    current_user.name = data.get('name', current_user.name)
+    current_user.email = data.get('email', current_user.email)
+    
+    if current_user.role == 'tutor':
+        current_user.department = data.get('department', current_user.department)
+        current_user.average_grade = data.get('average_grade', current_user.average_grade)
+    
+    # Update password if new password provided
+    if 'new_password' in data and data['new_password']:
+        current_user.password = generate_password_hash(data['new_password'])
+    
+    db.session.commit()
+    
+    return jsonify({"success": "Profile updated successfully"})
+
 
 @app.route('/notifications')
 @login_required  # Ensures only logged-in users can access
@@ -359,5 +451,21 @@ def decline_tutor(user_id):
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+def create_default_admin():
+    with app.app_context():
+        if not User.query.filter_by(role='admin').first():
+            admin = User(
+                name="System Admin",
+                email="admin@tutoring.com",
+                password=generate_password_hash("Admin@1234"),
+                role='admin',
+                department='ADMIN',
+                status='active'
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print("Default admin account created")
+
 if __name__ == '__main__':
+    create_default_admin()
     app.run(debug=True)
