@@ -179,6 +179,7 @@ def booking():
         selected_date = request.form.get('date')
         selected_time = request.form.get('time')
         tutor_id = request.form.get('tutor')
+        special_request = request.form.get('special_request')
 
         tutor = User.query.get(tutor_id)
 
@@ -193,7 +194,7 @@ def booking():
             return redirect(url_for('booking'))
 
         # Create booking with "pending" status
-        new_booking = Booking(user_id=current_user.id, tutor_id=tutor.id, date=selected_date, time=selected_time, status="pending")
+        new_booking = Booking(user_id=current_user.id, tutor_id=tutor.id, date=selected_date, time=selected_time, status="pending", special_request=special_request)
         db.session.add(new_booking)
         db.session.commit()
 

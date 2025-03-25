@@ -30,7 +30,8 @@ class Booking(db.Model):
     date = db.Column(db.String(20), nullable=False)  
     time = db.Column(db.String(10), nullable=False)  
     status = db.Column(db.String(20), default="pending")  
-    meeting_id = db.Column(db.String(20), nullable=True)  
+    meeting_id = db.Column(db.String(20), nullable=True)
+    special_request = db.Column(db.String(500), nullable=True)
 
     def __repr__(self):
         return f"Booking('{self.id}', Student: '{self.user_id}', Tutor: '{self.tutor_id}', Status: '{self.status}')"

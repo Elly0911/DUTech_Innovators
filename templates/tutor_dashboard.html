@@ -58,6 +58,7 @@
                             <span class="date"><i class="fas fa-calendar-day"></i> {{ booking.date }}</span>
                             <span class="time"><i class="fas fa-clock"></i> {{ booking.time }}</span>
                         </div>
+                        <p><strong>Tutoring Session Requests:</strong> {{ booking.special_request if booking.special_request else 'None' }}</p>
                     </div>
                 </div>
                 <div class="booking-actions">
@@ -98,6 +99,7 @@
                     <h3>{{ session.student.name }}</h3>
                     <p class="time"><i class="fas fa-clock"></i> {{ session.time }}</p>
                     <p class="meeting-id"><i class="fas fa-video"></i> {{ session.meeting_id }}</p>
+                    <p><strong>Tutoring Session Requests:</strong> {{ session.special_request if session.special_request else 'None' }}</p>
                 </div>
             </div>
             {% endfor %}
@@ -110,6 +112,7 @@
         {% endif %}
     </div>
 </div>
+
 <style>
     /* Base Bento Grid Styles */
     .tutor-dashboard {
@@ -271,5 +274,6 @@
         border-radius: 4px;
         font-family: monospace;
     }
-    </style>
+</style>
+
 {% endblock %}
