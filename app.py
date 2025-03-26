@@ -452,21 +452,5 @@ def decline_tutor(user_id):
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-def create_default_admin():
-    with app.app_context():
-        if not User.query.filter_by(role='admin').first():
-            admin = User(
-                name="System Admin",
-                email="admin@tutoring.com",
-                password=generate_password_hash("Admin@1234"),
-                role='admin',
-                department='ADMIN',
-                status='active'
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print("Default admin account created")
-
 if __name__ == '__main__':
-    create_default_admin()
     app.run(debug=True)
